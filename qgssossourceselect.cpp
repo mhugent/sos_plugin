@@ -24,7 +24,7 @@
 #include <QUrl>
 
 QgsSOSSourceSelect::QgsSOSSourceSelect( QgisInterface* iface, QWidget* parent, Qt::WFlags fl ):
-    QDialog( parent, fl ), mIface( iface ), mCapabilities( 0 )
+    QDialog( parent, fl ), mCapabilities( 0 ), mIface( iface )
 {
   setupUi( this );
   populateConnectionList();

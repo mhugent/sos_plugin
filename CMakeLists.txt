@@ -8,6 +8,7 @@ SET (SOS_SRCS
      qgsmaptoolsensorinfo.cpp
      qgssensorinfodialog.cpp
      qgswatermldata.cpp
+     qgsxmldata.cpp
 )
 
 SET (SOS_UIS
@@ -21,6 +22,7 @@ qgssossourceselect.h
 qgssoscapabilities.h
 qgsmaptoolsensorinfo.h
 qgssensorinfodialog.h
+qgsxmldata.h
 )
 
 IF (WIN32)
@@ -47,7 +49,10 @@ ADD_LIBRARY (sosplugin MODULE
 INCLUDE_DIRECTORIES(
      ${CMAKE_CURRENT_BINARY_DIR}
      ../../core
+     ../../core/auth
+     ../../core/geometry
      ../../gui
+     ../../gui/auth
      ${CMAKE_CURRENT_BINARY_DIR}/../../ui
      ${QWT_INCLUDE_DIR}
      ${EXPAT_INCLUDE_DIR}
