@@ -152,6 +152,7 @@ void QgsSensorInfoDialog::showDiagram()
   url.removeQueryItem( "request" );
   url.addQueryItem( "request", "GetObservation" );
   url.addQueryItem( "featureOfInterest", featureOfInterest );
+  url.removeQueryItem( "observedProperty" );
   url.addQueryItem( "observedProperty", observedProperty );
   url.addQueryItem( "responseFormat", "http://www.opengis.net/waterml/2.0" );
   if ( useTemporalFilter )
