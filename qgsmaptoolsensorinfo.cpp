@@ -38,7 +38,7 @@ QgsMapToolSensorInfo::~QgsMapToolSensorInfo()
   delete mSensorInfoDialog;
 }
 
-void QgsMapToolSensorInfo::canvasReleaseEvent( QMouseEvent * e )
+void QgsMapToolSensorInfo::canvasReleaseEvent( QgsMapMouseEvent* e )
 {
 
   QList< QgsMapLayer* > sensorLayerList = sensorLayers();
@@ -52,7 +52,9 @@ void QgsMapToolSensorInfo::canvasReleaseEvent( QMouseEvent * e )
 
 
   QgsMapToolIdentify idTool( mCanvas );
-  QList<QgsMapToolIdentify::IdentifyResult> idList = idTool.identify( e->x(), e->y(), sensorLayerList, QgsMapToolIdentify::TopDownAll );
+
+  QPoint pt = e->pixelPoint();
+  QList<QgsMapToolIdentify::IdentifyResult> idList = idTool.identify( pt.x(), pt.y(), sensorLayerList, QgsMapToolIdentify::TopDownAll );
   QList<QgsMapToolIdentify::IdentifyResult>::const_iterator idListIt = idList.constBegin();
   for ( ; idListIt != idList.constEnd(); ++idListIt )
   {

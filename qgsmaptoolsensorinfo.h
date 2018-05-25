@@ -32,7 +32,7 @@ class QgsMapToolSensorInfo: public QgsMapTool
     ~QgsMapToolSensorInfo();
 
     /**Get sensor information at point (observed properties and available time intervals)*/
-    void canvasReleaseEvent( QMouseEvent * e );
+    void canvasReleaseEvent( QgsMapMouseEvent* e ) override;
 
   private:
     /**Returns sensor layers in the project*/

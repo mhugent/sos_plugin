@@ -87,7 +87,9 @@ void QgsSensorInfoDialog::addObservables( const QString& serviceUrl, const QStri
     mObservableTreeWidget->setItemWidget( observableItem, 2, cb );
     //begin
     QDateTime beginDateTime = bIt->isValid() ? *bIt : QDateTime( QDate( 1900, 1, 1 ), QTime( 0, 0, 0 ), Qt::UTC );
-    mObservableTreeWidget->setItemWidget( observableItem, 3, new QDateTimeEdit( beginDateTime ) );
+    QDateTimeEdit* beginDateTimeEdit = new QDateTimeEdit( beginDateTime );
+    beginDateTimeEdit->setDisplayFormat( "dd.MM.yyyy HH:mm" );
+    mObservableTreeWidget->setItemWidget( observableItem, 3, beginDateTimeEdit );
     //end
     QDateTime endDateTime;
     if ( eIt->isValid() )
@@ -99,7 +101,9 @@ void QgsSensorInfoDialog::addObservables( const QString& serviceUrl, const QStri
       endDateTime =  QDateTime::currentDateTime().toTimeSpec( Qt::UTC );
       endDateTime.setTime( QTime( 0, 0, 0 ) );
     }
-    mObservableTreeWidget->setItemWidget( observableItem, 4, new QDateTimeEdit( endDateTime ) );
+    QDateTimeEdit* endDateTimeEdit = new QDateTimeEdit( endDateTime );
+    endDateTimeEdit->setDisplayFormat( "dd.MM.yyyy HH:mm" );
+    mObservableTreeWidget->setItemWidget( observableItem, 4, endDateTimeEdit );
     if ( bIt->isValid() && eIt->isValid() )
     {
       cb->setCheckState( Qt::Checked );
@@ -149,12 +153,14 @@ void QgsSensorInfoDialog::showDiagram()
   url.addQueryItem( "request", "GetObservation" );
   url.addQueryItem( "featureOfInterest", featureOfInterest );
   url.addQueryItem( "observedProperty", observedProperty );
+  url.addQueryItem( "responseFormat", "http://www.opengis.net/waterml/2.0" );
   if ( useTemporalFilter )
   {
     url.addQueryItem( "temporalFilter", temporalFilter );
   }
 
   QgsWaterMLData data( url.toString().toLocal8Bit().data() );
+
   QMap< QDateTime, double > timeValueMap;
   data.getData( &timeValueMap );
 
