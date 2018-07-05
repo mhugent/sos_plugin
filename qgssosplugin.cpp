@@ -49,7 +49,7 @@ void QgsSOSPlugin::initGui()
     mIface->addPluginToWebMenu( tr( "Sensor observation service" ), mAction );
 
     mSensorInfoAction = new QAction( QIcon( ":/sensor_info.png" ), tr( "Sensor info" ), 0 );
-    QObject::connect( mSensorInfoAction, SIGNAL( toggled( bool ) ), this, SLOT( toggleSensorInfo( bool ) ) );
+    QObject::connect( mSensorInfoAction, SIGNAL( clicked() ), this, SLOT( activateSensorInfoTool() ) );
     mSensorInfoAction->setCheckable( true );
     mIface->addWebToolBarIcon( mSensorInfoAction );
 
@@ -86,7 +86,7 @@ void QgsSOSPlugin::showSOSDialog()
   dialog.exec();
 }
 
-void QgsSOSPlugin::toggleSensorInfo( bool checked )
+void QgsSOSPlugin::activateSensorInfoTool()
 {
   if ( !mIface )
   {
@@ -99,14 +99,7 @@ void QgsSOSPlugin::toggleSensorInfo( bool checked )
     return;
   }
 
-  if ( checked )
-  {
-    canvas->setMapTool( mMapToolSensorInfo );
-  }
-  else
-  {
-    canvas->unsetMapTool( mMapToolSensorInfo );
-  }
+  canvas->setMapTool( mMapToolSensorInfo );
 }
 
 //global methods for the plugin manager

@@ -46,7 +46,7 @@ class QgsSOSPlugin: public QObject, public QgisPlugin
 
   private slots:
     void showSOSDialog();
-    void toggleSensorInfo( bool checked );
+    void activateSensorInfoTool();
 };
 
 #endif // QGSSOSPLUGIN_H
