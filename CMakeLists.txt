@@ -1,5 +1,17 @@
 ########################################################
 # Files
+find_package( Qt4 REQUIRED )
+
+SET ( QGIS_DIR "C:/Program Files/QGIS 2 18" CACHE PATH "Path to QGIS installation")
+SET ( EXPAT_INCLUDE_DIR "" CACHE PATH "Path to Expat include files" )
+SET ( EXPAT_LIBRARY "" CACHE FILEPATH "Path to libexpat")
+SET ( QWT_INCLUDE_DIR "" CACHE PATH "Path to QWT include files" )
+SET ( QWT_LIBRARY "" CACHE FILEPATH "Path to QWT lib")
+SET ( QT_INCLUDE_DIR "" CACHE PATH "Path to Qt include directory" )
+SET ( QT_LIB_DIR "" CACHE PATH "Path to the directory containing the Qt libraries")
+
+SET (CMAKE_CXX_STANDARD 11)
+
 
 SET (SOS_SRCS
      qgssosplugin.cpp
@@ -14,6 +26,7 @@ SET (SOS_SRCS
 SET (SOS_UIS
     qgssossourceselectbase.ui
     qgssensorinfodialogbase.ui
+    qgsnewhttpconnectionbase.ui
     )
 
 SET (SOS_MOC_HDRS
@@ -49,30 +62,34 @@ ADD_LIBRARY (sosplugin MODULE
 INCLUDE_DIRECTORIES(
      ${CMAKE_CURRENT_BINARY_DIR}
      .
-     ../../core
-     ../../core/auth
-     ../../core/geometry
-     ../../gui
-     ../../gui/auth
-     ../..
-     ${CMAKE_CURRENT_BINARY_DIR}/../../ui
+     ${QGIS_DIR}/include
      ${QWT_INCLUDE_DIR}
      ${EXPAT_INCLUDE_DIR}
+     ${QT_INCLUDE_DIR}/QtCore
+     ${QT_INCLUDE_DIR}/QtGui
+     ${QT_INCLUDE_DIR}/QtNetwork
+     ${QT_INCLUDE_DIR}/QtXml
+     ${QT_INCLUDE_DIR}/Qt
+     ${QT_INCLUDE_DIR}
      ..
      .
 )
 
+IF (WIN32)
+	ADD_DEFINITIONS( -DCORE_EXPORT=__declspec\(dllimport\))
+	ADD_DEFINITIONS( -DGUI_EXPORT=__declspec\(dllimport\))
+	ADD_DEFINITIONS( -Dnoexcept= )
+ENDIF (WIN32)
+
 TARGET_LINK_LIBRARIES(sosplugin
-  qgis_core
-  qgis_gui
+  ${QGIS_DIR}/lib/qgis_core.lib
+  ${QGIS_DIR}/lib/qgis_gui.lib
+  ${EXPAT_LIBRARY}
   ${QWT_LIBRARY}
+  ${QT_LIB_DIR}/QtCore4.lib
+  ${QT_LIB_DIR}/QtGui4.lib
+  ${QT_LIB_DIR}/QtNetwork4.lib
+  ${QT_LIB_DIR}/QtXml4.lib
 )
 
-
-########################################################
-# Install
-
-INSTALL(TARGETS sosplugin
-  RUNTIME DESTINATION ${QGIS_PLUGIN_DIR}
-  LIBRARY DESTINATION ${QGIS_PLUGIN_DIR}
-  )
+INSTALL( TARGETS sosplugin DESTINATION . )
