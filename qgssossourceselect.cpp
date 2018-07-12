@@ -144,7 +144,12 @@ void QgsSOSSourceSelect::gotCapabilities()
 void QgsSOSSourceSelect::addLayer()
 {
   QgsOWSConnection connection( "SOS", mConnectionsComboBox->currentText() );
-  QString getFeatureOfInterestUrl = connection.uri().param( "url" ) + "SERVICE=SOS&request=GetFeatureOfInterest&Version=2.0.0";
+  QString urlString = connection.uri().param( "url" );
+  if( !urlString.endsWith( "?" ) && !urlString.endsWith( "&" ) )
+  {
+      urlString.append( urlString.contains( "?" ) ? "&" : "?" );
+  }
+  QString getFeatureOfInterestUrl = urlString + "SERVICE=SOS&request=GetFeatureOfInterest&Version=2.0.0";
 
   QString observedPropertiesString;
   QList<QTreeWidgetItem*> selectedItemList = mOfferingsTreeWidget->selectedItems();
