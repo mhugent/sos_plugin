@@ -2,7 +2,9 @@
 # Files
 find_package( Qt4 REQUIRED )
 
-SET ( QGIS_DIR "C:/Program Files/QGIS 2 18" CACHE PATH "Path to QGIS installation")
+SET ( QGIS_INCLUDE_DIR "C:/Program Files/QGIS 2 18/include" CACHE PATH "Path to QGIS include directory")
+SET ( QGIS_CORE_LIB "C:/Program Files/QGIS 2 18/lib/qgis_core.lib" CACHE PATH "QGIS core library" )
+SET ( QGIS_GUI_LIB "C:/Program Files/QGIS 2 18/lib/qgis_gui.lib" CACHE PATH "QGIS gui library" )
 SET ( EXPAT_INCLUDE_DIR "" CACHE PATH "Path to Expat include files" )
 SET ( EXPAT_LIBRARY "" CACHE FILEPATH "Path to libexpat")
 SET ( QWT_INCLUDE_DIR "" CACHE PATH "Path to QWT include files" )
@@ -62,7 +64,7 @@ ADD_LIBRARY (sosplugin MODULE
 INCLUDE_DIRECTORIES(
      ${CMAKE_CURRENT_BINARY_DIR}
      .
-     ${QGIS_DIR}/include
+     ${QGIS_INCLUDE_DIR}
      ${QWT_INCLUDE_DIR}
      ${EXPAT_INCLUDE_DIR}
      ${QT_INCLUDE_DIR}/QtCore
@@ -79,11 +81,15 @@ IF (WIN32)
 	ADD_DEFINITIONS( -DCORE_EXPORT=__declspec\(dllimport\))
 	ADD_DEFINITIONS( -DGUI_EXPORT=__declspec\(dllimport\))
 	ADD_DEFINITIONS( -Dnoexcept= )
+ELSE()
+  ADD_DEFINITIONS( -DCORE_EXPORT= )
+	ADD_DEFINITIONS( -DGUI_EXPORT= )
 ENDIF (WIN32)
 
+IF (WIN32)
 TARGET_LINK_LIBRARIES(sosplugin
-  ${QGIS_DIR}/lib/qgis_core.lib
-  ${QGIS_DIR}/lib/qgis_gui.lib
+  ${QGIS_CORE_LIB}
+  ${QGIS_GUI_LIB}
   ${EXPAT_LIBRARY}
   ${QWT_LIBRARY}
   ${QT_LIB_DIR}/QtCore4.lib
@@ -91,5 +97,17 @@ TARGET_LINK_LIBRARIES(sosplugin
   ${QT_LIB_DIR}/QtNetwork4.lib
   ${QT_LIB_DIR}/QtXml4.lib
 )
+ELSE()
+  TARGET_LINK_LIBRARIES(sosplugin
+  ${QGIS_CORE_LIB}
+  ${QGIS_GUI_LIB}
+  ${EXPAT_LIBRARY}
+  ${QWT_LIBRARY}
+  ${QT_LIB_DIR}/libQtCore.so
+  ${QT_LIB_DIR}/libQtGui.so
+  ${QT_LIB_DIR}/libQtNetwork.so
+  ${QT_LIB_DIR}/libQtXml.so
+)
+ENDIF (WIN32)
 
 INSTALL( TARGETS sosplugin DESTINATION . )
