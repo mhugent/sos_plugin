@@ -85,6 +85,7 @@ void QgsSensorInfoDialog::addObservables( const QString& serviceUrl, const QStri
     QTreeWidgetItem* observableItem = new QTreeWidgetItem( stationIdWidget, QStringList() << "" << *obsIt );
     QCheckBox* cb = new QCheckBox();
     mObservableTreeWidget->setItemWidget( observableItem, 2, cb );
+    cb->setChecked( true );
     //begin
     QDateTime beginDateTime = bIt->isValid() ? *bIt : QDateTime( QDate( 1900, 1, 1 ), QTime( 0, 0, 0 ), Qt::UTC );
     QDateTimeEdit* beginDateTimeEdit = new QDateTimeEdit( beginDateTime );
