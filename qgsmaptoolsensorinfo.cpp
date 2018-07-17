@@ -74,6 +74,7 @@ void QgsMapToolSensorInfo::canvasReleaseEvent( QgsMapMouseEvent* e )
     QList< QDateTime > beginList;
     QList< QDateTime > endList;
     getDataAvailability( dp->dataSourceUri(), id, observedProperties, beginList, endList );
+
     mSensorInfoDialog->addObservables( dp->dataSourceUri(), id, observedProperties, beginList, endList );
   }
 }
@@ -113,6 +114,11 @@ int QgsMapToolSensorInfo::getDataAvailability( const QString& serviceUrl, const 
   }
 
   QUrl url( serviceUrl );
+
+  //filter list to only get the observables selected for the sos layer
+  QSet<QString> selectedObservables = QUrl::fromPercentEncoding( url.queryItemValue( "observedProperty" )\
+                                      .toLocal8Bit() ).split( ",", QString::SkipEmptyParts ).toSet();
+
   url.removeQueryItem( "observedProperty" );
   url.removeQueryItem( "request" );
   url.addQueryItem( "request", "GetDataAvailability" );
@@ -151,7 +157,15 @@ int QgsMapToolSensorInfo::getDataAvailability( const QString& serviceUrl, const 
     {
       continue;
     }
+
+    //property was not requested
     QString property = observedPropertyElem.attribute( "href" );
+    if( !selectedObservables.isEmpty() && !selectedObservables.contains( property ) )
+    {
+        continue;
+    }
+
+
     QDateTime beginTime;
     QDateTime endTime;
 
@@ -176,7 +190,7 @@ int QgsMapToolSensorInfo::getDataAvailability( const QString& serviceUrl, const 
 
     if ( observedPropertySet.contains( property ) )
     {
-      continue;
+        continue;
     }
 
     observedPropertySet.insert( property );
