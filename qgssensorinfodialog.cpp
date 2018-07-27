@@ -20,6 +20,7 @@
 #include <QCheckBox>
 #include <QCursor>
 #include <QDateTimeEdit>
+#include <QInputDialog>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QUrl>
@@ -129,6 +130,18 @@ void QgsSensorInfoDialog::showDiagram()
     return;
   }
 
+  QwtPlot* targetPlot = 0;
+  QStringList currentPlots = plotList();
+  if( currentPlots.size() > 0 )
+  {
+    currentPlots.prepend( tr( "Create new plot" ) );
+    QString targetPlotName = QInputDialog::getItem( this, tr( "Plot" ), tr( "Select target plot for data" ), currentPlots );
+    if ( targetPlotName != tr( "Create new plot" ) )
+    {
+        targetPlot = plot( targetPlotName );
+    }
+  }
+
   QString featureOfInterest = parent->text( 0 );
   QString serviceUrl = parent->data( 0, Qt::UserRole ).toString();
   QString observedProperty = item->text( 1 );
@@ -184,24 +197,31 @@ void QgsSensorInfoDialog::showDiagram()
     ++i;
   }
 
-  //create QWtPlot
-  QwtPlot* diagram = new QwtPlot( featureOfInterest, this );
-  diagram->setAxisScaleDraw( QwtPlot::xBottom, new TimeScaleDraw() );
+  //create new QWtPlot
+  if( !targetPlot )
+  {
+    targetPlot = new QwtPlot( featureOfInterest, this );
+    targetPlot->setAxisScaleDraw( QwtPlot::xBottom, new TimeScaleDraw() );
+
+    //plot picker to show tooltips
+    QwtPlotPicker* plotPicker = new QwtPlotPicker( targetPlot->canvas() );
+    plotPicker->setSelectionFlags( QwtPicker::PointSelection | QwtPicker::ClickSelection );
+    plotPicker->setRubberBand( QwtPlotPicker::RectRubberBand );
+    connect( plotPicker, SIGNAL( selected( const QwtDoublePoint& ) ), this, SLOT( onDiagramSelected( const QwtDoublePoint& ) ) );
+
+    mTabWidget->addTab( targetPlot, featureOfInterest );
+  }
+
   QwtPlotCurve* curve = new QwtPlotCurve( observedProperty );
   curve->setPen( QPen( Qt::red ) );
   curve->setData( timeVector.constData(), valueVector.constData(), timeValueMap.size() );
   QwtSymbol symbol( QwtSymbol::Rect, QBrush( Qt::NoBrush ), QPen( Qt::red ), QSize( 5, 5 ) );
   curve->setSymbol( symbol );
-  curve->attach( diagram );
+  curve->attach( targetPlot );
 
-  //plot picker to show tooltips
-  QwtPlotPicker* plotPicker = new QwtPlotPicker( diagram->canvas() );
-  plotPicker->setSelectionFlags( QwtPicker::PointSelection | QwtPicker::ClickSelection );
-  plotPicker->setRubberBand( QwtPlotPicker::RectRubberBand );
-  connect( plotPicker, SIGNAL( selected( const QwtDoublePoint& ) ), this, SLOT( onDiagramSelected( const QwtDoublePoint& ) ) );
 
-  mTabWidget->addTab( diagram, featureOfInterest );
-  diagram->replot();
+
+  targetPlot->replot();
   raise();
 }
 
@@ -267,6 +287,35 @@ void QgsSensorInfoDialog::onDiagramSelected( const QwtDoublePoint &pt )
       cPlot->replot();
     }
   }
+}
+
+QStringList QgsSensorInfoDialog::plotList() const
+{
+    QStringList list;
+    int nTabs = mTabWidget->count();
+    for( int i = 0; i < nTabs; ++i )
+    {
+        QwtPlot* plot = qobject_cast<QwtPlot*>( mTabWidget->widget( i ) );
+        if( plot )
+        {
+            list.append( mTabWidget->tabText( i ) );
+        }
+    }
+    return list;
+}
+
+QwtPlot* QgsSensorInfoDialog::plot( const QString& name )
+{
+    int nTabs = mTabWidget->count();
+    for( int i = 0; i < nTabs; ++i )
+    {
+        if( mTabWidget->tabText( i ) == name )
+        {
+            return qobject_cast<QwtPlot*>( mTabWidget->widget( i ) );
+        }
+    }
+
+    return 0;
 }
 
 QwtPlot* QgsSensorInfoDialog::currentPlot()

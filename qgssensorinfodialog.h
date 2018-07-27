@@ -43,6 +43,8 @@ class QgsSensorInfoDialog: public QDialog, private Ui::QgsSensorInfoDialogBase
     void on_mTabWidget_tabCloseRequested( int index );
 
   private:
+    QStringList plotList() const;
+    QwtPlot* plot( const QString& name );
     QwtPlot* currentPlot();
     QwtPlotMarker* plotMarker( QwtPlot* plot );
 
