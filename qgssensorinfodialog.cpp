@@ -209,12 +209,18 @@ void QgsSensorInfoDialog::showDiagram()
     plotPicker->setRubberBand( QwtPlotPicker::RectRubberBand );
     connect( plotPicker, SIGNAL( selected( const QwtDoublePoint& ) ), this, SLOT( onDiagramSelected( const QwtDoublePoint& ) ) );
 
-    mTabWidget->addTab( targetPlot, featureOfInterest );
+    int nPlots = plotList().size();
+    mTabWidget->addTab( targetPlot, tr( "Plot %1" ).arg( nPlots + 1 ) );
   }
 
+  //random color
+  QColor curveColor = QColor::fromHsv( qrand() % 360, 64 + qrand() % 192, 128 + qrand() % 128 );
+
   QwtPlotCurve* curve = new QwtPlotCurve( observedProperty );
-  curve->setPen( QPen( Qt::red ) );
+  curve->setPen( QPen( curveColor ) );
   curve->setData( timeVector.constData(), valueVector.constData(), timeValueMap.size() );
+  curve->setTitle( featureOfInterest );
+
   QwtSymbol symbol( QwtSymbol::Rect, QBrush( Qt::NoBrush ), QPen( Qt::red ), QSize( 5, 5 ) );
   curve->setSymbol( symbol );
   curve->attach( targetPlot );
@@ -250,43 +256,57 @@ QDateTime QgsSensorInfoDialog::convertIntToTime( int t ) const
 void QgsSensorInfoDialog::onDiagramSelected( const QwtDoublePoint &pt )
 {
   QwtPlot* cPlot = currentPlot();
-
-  //snap to next point
-
-  if ( cPlot )
+  if( !cPlot )
   {
-    QwtPlotCurve* curve = dynamic_cast<QwtPlotCurve*>( cPlot->itemList()[0] );
-    QwtPlotItemList debugList =  cPlot->itemList();
-
-    int xPixel = cPlot->transform( QwtPlot::xBottom, pt.x() );
-    int yPixel = cPlot->transform( QwtPlot::yLeft , pt.y() );
-
-    int snapPoint = curve->closestPoint( QPoint( xPixel, yPixel ) );
-    if ( snapPoint >= 0 )
-    {
-      QString snappedTime = convertIntToTime( curve->data().x( snapPoint ) ).toString();
-      double snappedValue = curve->data().y( snapPoint );
-
-      qWarning( "Snapped value" );
-      qWarning( snappedTime.toLocal8Bit().data() );
-      qWarning( QString::number( snappedValue ).toLocal8Bit().data() );
-
-      QwtPlotMarker* mark = plotMarker( cPlot );
-      mark->setValue( curve->data().x( snapPoint ), curve->data().y( snapPoint ) );
-      mark->show();
-
-      //marker label
-
-      QwtText  labelText;
-      labelText.setText( "Value: " + QString::number( snappedValue ) + "\n" + snappedTime );
-      labelText.setColor( QColor( Qt::black ) );
-      QBrush labelBrush( QColor( Qt::white ), Qt::SolidPattern );
-      labelText.setBackgroundBrush( labelBrush );
-      mark->setLabel( labelText );
-      mark->setLabelAlignment( Qt::AlignRight | Qt::AlignTop );
-      cPlot->replot();
-    }
+      return;
   }
+
+  int xPixel = cPlot->transform( QwtPlot::xBottom, pt.x() );
+  int yPixel = cPlot->transform( QwtPlot::yLeft , pt.y() );
+
+  double minDist = std::numeric_limits<double>::max();
+  QwtPlotCurve* closestCurve = 0;
+  int snapPoint = -1;
+
+  QwtPlotItemList items = cPlot->itemList();
+  for( int i = 0; i < items.size(); ++i )
+  {
+      QwtPlotCurve* curve = dynamic_cast<QwtPlotCurve*>( cPlot->itemList()[i] );
+      if( !curve )
+      {
+          continue;
+      }
+
+      double currentDist;
+      int currentSnapPoint = curve->closestPoint( QPoint( xPixel, yPixel ), &currentDist );
+      if( currentDist < minDist && currentSnapPoint >= 0 )
+      {
+        minDist = currentDist;
+        snapPoint = currentSnapPoint;
+        closestCurve = curve;
+      }
+  }
+
+  if( !closestCurve )
+  {
+      return;
+  }
+
+  QString snappedTime = convertIntToTime( closestCurve->data().x( snapPoint ) ).toString();
+  double snappedValue = closestCurve->data().y( snapPoint );
+
+  QwtPlotMarker* mark = plotMarker( cPlot );
+  mark->setValue( closestCurve->data().x( snapPoint ), closestCurve->data().y( snapPoint ) );
+  mark->show();
+
+  QwtText  labelText;
+  labelText.setText( "Value: " + QString::number( snappedValue ) + "\n" + snappedTime );
+  labelText.setColor( QColor( Qt::black ) );
+  QBrush labelBrush( QColor( Qt::white ), Qt::SolidPattern );
+  labelText.setBackgroundBrush( labelBrush );
+  mark->setLabel( labelText );
+  mark->setLabelAlignment( Qt::AlignRight | Qt::AlignTop );
+  cPlot->replot();
 }
 
 QStringList QgsSensorInfoDialog::plotList() const
