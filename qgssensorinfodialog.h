@@ -35,6 +35,8 @@ class QgsSensorInfoDialog: public QDialog, private Ui::QgsSensorInfoDialogBase
     void clearObservables();
     void addObservables( const QString& serviceUrl, const QString stationId, const QStringList& observables, const QList< QDateTime >& begin, const QList< QDateTime >& end );
 
+    void openObservablesTab();
+
   private slots:
     void showDiagram();
     int convertTimeToInt( const QDateTime& dt ) const;

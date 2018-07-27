@@ -214,6 +214,7 @@ void QgsMapToolSensorInfo::showSensorInfoDialog()
   {
     mSensorInfoDialog = new QgsSensorInfoDialog();
   }
+  mSensorInfoDialog->openObservablesTab();
   mSensorInfoDialog->show();
   mSensorInfoDialog->raise();
 }

@@ -115,6 +115,11 @@ void QgsSensorInfoDialog::addObservables( const QString& serviceUrl, const QStri
   mObservableTreeWidget->expandAll();
 }
 
+void QgsSensorInfoDialog::openObservablesTab()
+{
+    mTabWidget->setCurrentIndex( 0 );
+}
+
 void QgsSensorInfoDialog::showDiagram()
 {
   QList<QTreeWidgetItem*> selectedItems = mObservableTreeWidget->selectedItems();
