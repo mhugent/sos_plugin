@@ -24,6 +24,7 @@
 
 #include "qgsmaptool.h"
 
+class QgsRubberBand;
 class QgsSensorInfoDialog;
 class QgsVectorLayer;
 class QDateTime;
@@ -35,7 +36,10 @@ class QgsMapToolSensorInfo: public QgsMapTool
     QgsMapToolSensorInfo( QgsMapCanvas* canvas );
     ~QgsMapToolSensorInfo();
 
-    /**Get sensor information at point (observed properties and available time intervals)*/
+    void canvasMoveEvent( QgsMapMouseEvent* e ) override;
+
+    void canvasPressEvent( QgsMapMouseEvent* e ) override;
+
     void canvasReleaseEvent( QgsMapMouseEvent* e ) override;
 
   private:
@@ -49,6 +53,12 @@ class QgsMapToolSensorInfo: public QgsMapTool
     bool mDataAvailabilityRequestFinished;
 
     QgsSensorInfoDialog* mSensorInfoDialog;
+
+    QgsRubberBand* mRubberBand;
+
+    bool mDragging;
+
+    QRect mSelectRect;
 
   private slots:
     void dataAvailabilityRequestFinished();

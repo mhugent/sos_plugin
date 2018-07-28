@@ -19,6 +19,7 @@
 #include "qgsmapcanvas.h"
 #include "qgsmaptoolidentify.h"
 #include "qgsnetworkaccessmanager.h"
+#include "qgsrubberband.h"
 #include "qgssensorinfodialog.h"
 #include "qgsvectordataprovider.h"
 #include "qgsvectorlayer.h"
@@ -28,7 +29,7 @@
 #include <QNetworkRequest>
 
 QgsMapToolSensorInfo::QgsMapToolSensorInfo( QgsMapCanvas* canvas ): QgsMapTool( canvas ),
-    mDataAvailabilityRequestFinished( true ), mSensorInfoDialog( 0 )
+    mDataAvailabilityRequestFinished( true ), mSensorInfoDialog( 0 ), mRubberBand( 0 ), mDragging( false )
 {
 
 }
@@ -36,47 +37,100 @@ QgsMapToolSensorInfo::QgsMapToolSensorInfo( QgsMapCanvas* canvas ): QgsMapTool( 
 QgsMapToolSensorInfo::~QgsMapToolSensorInfo()
 {
   delete mSensorInfoDialog;
+  delete mRubberBand;
+}
+
+void QgsMapToolSensorInfo::canvasMoveEvent( QgsMapMouseEvent* e )
+{
+    if ( e->buttons() != Qt::LeftButton )
+      return;
+
+    if ( !mDragging )
+    {
+      mDragging = true;
+      mSelectRect.setTopLeft( e->pos() );
+    }
+    mSelectRect.setBottomRight( e->pos() );
+
+    if( mRubberBand )
+    {
+        mRubberBand->setToCanvasRectangle( mSelectRect );
+    }
+}
+
+void QgsMapToolSensorInfo::canvasPressEvent( QgsMapMouseEvent* e )
+{
+    mSelectRect.setRect( 0, 0, 0, 0 );
+    delete mRubberBand;
+    mRubberBand = new QgsRubberBand( mCanvas, QGis::Polygon );
+    mRubberBand->setFillColor( QColor( 255, 0, 0, 127 ) );
 }
 
 void QgsMapToolSensorInfo::canvasReleaseEvent( QgsMapMouseEvent* e )
 {
+    delete mRubberBand;
+    mRubberBand = 0;
 
-  QList< QgsMapLayer* > sensorLayerList = sensorLayers();
-  if ( sensorLayerList.isEmpty() )
-  {
-    return;
-  }
-
-  showSensorInfoDialog();
-  mSensorInfoDialog->clearObservables();
-
-
-  QgsMapToolIdentify idTool( mCanvas );
-
-  QPoint pt = e->pixelPoint();
-  QList<QgsMapToolIdentify::IdentifyResult> idList = idTool.identify( pt.x(), pt.y(), sensorLayerList, QgsMapToolIdentify::TopDownAll );
-  QList<QgsMapToolIdentify::IdentifyResult>::const_iterator idListIt = idList.constBegin();
-  for ( ; idListIt != idList.constEnd(); ++idListIt )
-  {
-    QgsVectorLayer* vl = qobject_cast<QgsVectorLayer*>( idListIt->mLayer );
-    if ( !vl )
+    QList< QgsMapLayer* > sensorLayerList = sensorLayers();
+    if ( sensorLayerList.isEmpty() )
     {
-      continue;
+      return;
     }
-    QgsDataProvider* dp = vl->dataProvider();
 
-    QgsMapToolIdentify::IdentifyResult debug = *idListIt;
-    QString name = idListIt->mFeature.attribute( "name" ).toString();
-    QString id = idListIt->mFeature.attribute( "identifier" ).toString();
+    showSensorInfoDialog();
+    mSensorInfoDialog->clearObservables();
 
-    //data structure with id / name / list< observable, start time, end time>
-    QStringList observedProperties;
-    QList< QDateTime > beginList;
-    QList< QDateTime > endList;
-    getDataAvailability( dp->dataSourceUri(), id, observedProperties, beginList, endList );
+    QList< QgsMapLayer* >::const_iterator  layerIt = sensorLayerList.begin();
+    for(; layerIt != sensorLayerList.end(); ++layerIt )
+    {
+        QgsVectorLayer* vl = dynamic_cast<QgsVectorLayer*>( *layerIt );
+        if( !vl )
+        {
+            return;
+        }
+        QgsDataProvider* dp = vl->dataProvider();
+        if( !dp )
+        {
+            return;
+        }
 
-    mSensorInfoDialog->addObservables( dp->dataSourceUri(), id, observedProperties, beginList, endList );
-  }
+        //rectangle in layer CRS
+        QgsPoint llRect;
+        QgsPoint urRect;
+        if( mDragging )
+        {
+            llRect = toMapCoordinates( mSelectRect.bottomLeft () );
+            urRect = toMapCoordinates( mSelectRect.topRight() );
+        }
+        else //click
+        {
+            QPoint clickPoint = e->originalPixelPoint();
+            //+- 5 pixel tolerance
+            llRect = toMapCoordinates( QPoint( clickPoint.x() - 5, clickPoint.y() + 5 ) );
+            urRect = toMapCoordinates( QPoint( clickPoint.x() + 5, clickPoint.y() - 5 ) );
+        }
+        QgsRectangle selectRect = toLayerCoordinates( *layerIt, QgsRectangle( llRect.x(), llRect.y(), urRect.x(), urRect.y() ) );
+
+        QgsFeatureRequest fReq( selectRect );
+        QgsFeatureIterator fIt = vl->getFeatures( fReq );
+
+        QgsFeature f;
+        while( fIt.nextFeature( f ) )
+        {
+            QString name = f.attribute( "name" ).toString();
+            QString id = f.attribute( "identifier" ).toString();
+
+            //data structure with id / name / list< observable, start time, end time>
+            QStringList observedProperties;
+            QList< QDateTime > beginList;
+            QList< QDateTime > endList;
+            getDataAvailability( dp->dataSourceUri(), id, observedProperties, beginList, endList );
+
+            mSensorInfoDialog->addObservables( dp->dataSourceUri(), id, observedProperties, beginList, endList );
+        }
+    }
+
+    mDragging = false;
 }
 
 QList< QgsMapLayer* > QgsMapToolSensorInfo::sensorLayers()
