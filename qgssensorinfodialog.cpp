@@ -53,9 +53,15 @@ class TimeScaleDraw: public QwtScaleDraw
 QgsSensorInfoDialog::QgsSensorInfoDialog( QWidget* parent, Qt::WindowFlags f ): QDialog( parent, f )
 {
   setupUi( this );
+
   QPushButton* displayButton = new QPushButton( tr( "Display" ), this );
   connect( displayButton, SIGNAL( clicked() ), this, SLOT( showDiagram() ) );
   mButtonBox->addButton( displayButton, QDialogButtonBox::ActionRole );
+
+  mShowAllButton = new QPushButton( tr( "Show all observables" ), this );
+  mShowAllButton->setEnabled( false );
+  connect( mShowAllButton, SIGNAL( clicked() ), this, SLOT( showAllObservables() ) );
+  mButtonBox->addButton( mShowAllButton, QDialogButtonBox::ActionRole );
 
   mTabWidget->setTabsClosable( true );
 }
@@ -67,15 +73,31 @@ QgsSensorInfoDialog::~QgsSensorInfoDialog()
 void QgsSensorInfoDialog::clearObservables()
 {
   mObservableTreeWidget->clear();
+  mHiddenObservables.clear();
 }
 
 void QgsSensorInfoDialog::addObservables( const QString& serviceUrl, const QString stationId, const QStringList& observables, const QList< QDateTime >& begin,
     const QList< QDateTime >& end )
 {
-  QTreeWidgetItem* stationIdWidget = new QTreeWidgetItem( QStringList() << stationId );
-  stationIdWidget->setData( 0, Qt::UserRole, serviceUrl );
-  stationIdWidget->setFlags( Qt::ItemIsEnabled );
-  mObservableTreeWidget->addTopLevelItem( stationIdWidget );
+  QTreeWidgetItem* stationIdItem = 0;
+  int stationItemCount = mObservableTreeWidget->topLevelItemCount();
+  for( int i = 0; i < stationItemCount; ++i )
+  {
+    QTreeWidgetItem* currentItem = mObservableTreeWidget->topLevelItem( i );
+    if( currentItem->text( 0 ) == stationId )
+    {
+        stationIdItem = currentItem;
+        break;
+    }
+  }
+
+  if( !stationIdItem ) //item does not yet exist, create a new one
+  {
+      stationIdItem = new QTreeWidgetItem( QStringList() << stationId );
+      mObservableTreeWidget->addTopLevelItem( stationIdItem );
+      stationIdItem->setData( 0, Qt::UserRole, serviceUrl );
+      stationIdItem->setFlags( Qt::ItemIsEnabled );
+  }
 
   QStringList::const_iterator obsIt = observables.constBegin();
   QList< QDateTime >::const_iterator bIt = begin.constBegin();
@@ -83,7 +105,7 @@ void QgsSensorInfoDialog::addObservables( const QString& serviceUrl, const QStri
   for ( ; obsIt != observables.constEnd() && bIt != begin.constEnd() && eIt != end.constEnd(); ++obsIt )
   {
 
-    QTreeWidgetItem* observableItem = new QTreeWidgetItem( stationIdWidget, QStringList() << "" << *obsIt );
+    QTreeWidgetItem* observableItem = new QTreeWidgetItem( stationIdItem, QStringList() << "" << *obsIt );
     QCheckBox* cb = new QCheckBox();
     mObservableTreeWidget->setItemWidget( observableItem, 2, cb );
     cb->setChecked( true );
@@ -113,6 +135,19 @@ void QgsSensorInfoDialog::addObservables( const QString& serviceUrl, const QStri
     mObservableTreeWidget->setCurrentItem( observableItem );
   }
   mObservableTreeWidget->expandAll();
+}
+
+void QgsSensorInfoDialog::addHiddenObservables( const QString& serviceUrl, const QString stationId, const QStringList& observables, const QList< QDateTime >& begin, const QList< QDateTime >& end )
+{
+    ObservableEntry entry;
+    entry.serviceUrl = serviceUrl;
+    entry.stationId = stationId;
+    entry.observables = observables;
+    entry.beginList = begin;
+    entry.endList = end;
+
+    mHiddenObservables.append( entry );
+    mShowAllButton->setEnabled( true );
 }
 
 void QgsSensorInfoDialog::openObservablesTab()
@@ -377,4 +412,15 @@ void QgsSensorInfoDialog::on_mTabWidget_tabCloseRequested( int index )
     return;
   }
   mTabWidget->removeTab( index );
+}
+
+void QgsSensorInfoDialog::showAllObservables()
+{
+    QList< ObservableEntry >::const_iterator it = mHiddenObservables.constBegin();
+    for(; it != mHiddenObservables.constEnd(); ++it )
+    {
+        addObservables( it->serviceUrl, it->stationId, it->observables, it->beginList, it->endList );
+    }
+    mHiddenObservables.clear();
+    mShowAllButton->setEnabled( false );
 }

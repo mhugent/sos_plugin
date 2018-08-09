@@ -124,9 +124,13 @@ void QgsMapToolSensorInfo::canvasReleaseEvent( QgsMapMouseEvent* e )
             QStringList observedProperties;
             QList< QDateTime > beginList;
             QList< QDateTime > endList;
-            getDataAvailability( dp->dataSourceUri(), id, observedProperties, beginList, endList );
+            QStringList filteredProperties;
+            QList< QDateTime > filteredBegin;
+            QList< QDateTime > filteredEnd;
+            getDataAvailability( dp->dataSourceUri(), id, observedProperties, beginList, endList, filteredProperties, filteredBegin, filteredEnd );
 
             mSensorInfoDialog->addObservables( dp->dataSourceUri(), id, observedProperties, beginList, endList );
+            mSensorInfoDialog->addHiddenObservables( dp->dataSourceUri(), id, filteredProperties, filteredBegin, filteredEnd );
         }
     }
 
@@ -159,8 +163,8 @@ QList< QgsMapLayer* > QgsMapToolSensorInfo::sensorLayers()
 }
 
 int QgsMapToolSensorInfo::getDataAvailability( const QString& serviceUrl, const QString& station_id,
-    QStringList& observedPropertyList,
-    QList< QDateTime >& beginList, QList< QDateTime >& endList )
+    QStringList& observedPropertyList, QList< QDateTime >& beginList, QList< QDateTime >& endList,
+    QStringList& filteredPropertyList, QList< QDateTime >& filteredBeginList, QList< QDateTime >& filteredEndList )
 {
   if ( !mDataAvailabilityRequestFinished ) //another request is still in progress
   {
@@ -179,7 +183,6 @@ int QgsMapToolSensorInfo::getDataAvailability( const QString& serviceUrl, const 
   url.addQueryItem( "featureofinterest", station_id );
 
   QString debug = url.toString();
-  qWarning( debug.toLocal8Bit().data() );
 
   mDataAvailabilityRequestFinished = false;
   QUrl u = QUrl::fromEncoded( url.toString().toLocal8Bit() );
@@ -214,11 +217,11 @@ int QgsMapToolSensorInfo::getDataAvailability( const QString& serviceUrl, const 
 
     //property was not requested
     QString property = observedPropertyElem.attribute( "href" );
+    bool propertyRequested = true;
     if( !selectedObservables.isEmpty() && !selectedObservables.contains( property ) )
     {
-        continue;
+        propertyRequested = false;
     }
-
 
     QDateTime beginTime;
     QDateTime endTime;
@@ -248,12 +251,20 @@ int QgsMapToolSensorInfo::getDataAvailability( const QString& serviceUrl, const 
     }
 
     observedPropertySet.insert( property );
-    observedPropertyList.push_back( property );
-    beginList.push_back( beginTime );
-    endList.push_back( endTime );
+    if( propertyRequested )
+    {
+        observedPropertyList.push_back( property );
+        beginList.push_back( beginTime );
+        endList.push_back( endTime );
+    }
+    else
+    {
+        filteredPropertyList.push_back( property );
+        filteredBeginList.push_back( beginTime );
+        filteredEndList.push_back( endTime );
+    }
   }
 
-  qWarning( response.data() );
   return 0;
 }
 

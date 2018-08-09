@@ -29,11 +29,23 @@ class QgsSensorInfoDialog: public QDialog, private Ui::QgsSensorInfoDialogBase
 {
     Q_OBJECT
   public:
+
+    struct ObservableEntry
+    {
+        QString serviceUrl;
+        QString stationId;
+        QStringList observables;
+        QList< QDateTime > beginList;
+        QList< QDateTime > endList;
+    };
+
     QgsSensorInfoDialog( QWidget * parent = 0, Qt::WindowFlags f = 0 );
     ~QgsSensorInfoDialog();
 
     void clearObservables();
     void addObservables( const QString& serviceUrl, const QString stationId, const QStringList& observables, const QList< QDateTime >& begin, const QList< QDateTime >& end );
+    /**Adds observables which are hidden at the moment but may be shown later (after mShowAllObservableButton has been clicked)*/
+    void addHiddenObservables( const QString& serviceUrl, const QString stationId, const QStringList& observables, const QList< QDateTime >& begin, const QList< QDateTime >& end );
 
     void openObservablesTab();
 
@@ -43,6 +55,7 @@ class QgsSensorInfoDialog: public QDialog, private Ui::QgsSensorInfoDialogBase
     QDateTime convertIntToTime( int t ) const;
     void onDiagramSelected( const QwtDoublePoint &pt );
     void on_mTabWidget_tabCloseRequested( int index );
+    void showAllObservables();
 
   private:
     QStringList plotList() const;
@@ -51,6 +64,10 @@ class QgsSensorInfoDialog: public QDialog, private Ui::QgsSensorInfoDialogBase
     QwtPlotMarker* plotMarker( QwtPlot* plot );
 
     QMap< QwtPlot*, QwtPlotMarker* > mPlotMarkers;
+
+    QList< ObservableEntry > mHiddenObservables;
+
+    QPushButton* mShowAllButton;
 };
 
 #endif // QGSSENSORINFODIALOG_H

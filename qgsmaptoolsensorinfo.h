@@ -48,7 +48,8 @@ class QgsMapToolSensorInfo: public QgsMapTool
     /**Does GetDataAvailability request for station id*/
     int getDataAvailability( const QString& serviceUrl, const QString& station_id,
                              QStringList& observedPropertyList, QList< QDateTime >& begin,
-                             QList< QDateTime >& end );
+                             QList< QDateTime >& end,  QStringList& filteredPropertyList, QList< QDateTime >& filteredBeginList,
+                             QList< QDateTime >& filteredEndList );
 
     bool mDataAvailabilityRequestFinished;
 
