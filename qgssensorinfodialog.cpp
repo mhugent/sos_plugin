@@ -20,9 +20,14 @@
 #include <QCheckBox>
 #include <QCursor>
 #include <QDateTimeEdit>
+#include <QFile>
+#include <QFileDialog>
+#include <QFileInfo>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QSettings>
+#include <QTextStream>
 #include <QUrl>
 #include <QToolTip>
 #include <qwt_picker_machine.h>
@@ -62,6 +67,10 @@ QgsSensorInfoDialog::QgsSensorInfoDialog( QWidget* parent, Qt::WindowFlags f ): 
   mShowAllButton->setEnabled( false );
   connect( mShowAllButton, SIGNAL( clicked() ), this, SLOT( showAllObservables() ) );
   mButtonBox->addButton( mShowAllButton, QDialogButtonBox::ActionRole );
+
+  QPushButton* exportToCSVButton = new QPushButton( tr( "Export CSV..." ), this );
+  connect( exportToCSVButton, SIGNAL( clicked() ), this, SLOT( exportToCSV() ) );
+  mButtonBox->addButton( exportToCSVButton, QDialogButtonBox::ActionRole );
 
   mTabWidget->setTabsClosable( true );
 }
@@ -256,10 +265,9 @@ void QgsSensorInfoDialog::showDiagram()
   //random color
   QColor curveColor = QColor::fromHsv( qrand() % 360, 64 + qrand() % 192, 128 + qrand() % 128 );
 
-  QwtPlotCurve* curve = new QwtPlotCurve( observedProperty );
+  QwtPlotCurve* curve = new QwtPlotCurve( featureOfInterest + "_" + observedProperty );
   curve->setPen( QPen( curveColor ) );
   curve->setData( timeVector.constData(), valueVector.constData(), timeValueMap.size() );
-  curve->setTitle( featureOfInterest );
 
   QwtSymbol symbol( QwtSymbol::Rect, QBrush( Qt::NoBrush ), QPen( Qt::red ), QSize( 5, 5 ) );
   curve->setSymbol( symbol );
@@ -423,4 +431,60 @@ void QgsSensorInfoDialog::showAllObservables()
     }
     mHiddenObservables.clear();
     mShowAllButton->setEnabled( false );
+}
+
+void QgsSensorInfoDialog::exportToCSV()
+{
+    QSettings s;
+    QString saveDir = QFileDialog::getExistingDirectory( this, tr( "Select output directory" ), s.value( "/NIWA/sos/exportCsvDir" ).toString() );
+    if( saveDir.isEmpty() )
+    {
+        return;
+    }
+
+    //current tab
+    QwtPlot* plot = currentPlot();
+    if( !plot )
+    {
+        return;
+    }
+
+    QwtPlotItemList items = plot->itemList();
+    if( items.size() < 1 )
+    {
+        return;
+    }
+
+    for( int i = 0; i < items.size(); ++i )
+    {
+        QwtPlotCurve* curve = dynamic_cast<QwtPlotCurve*>( items.at( i ) );
+        if( !curve )
+        {
+            continue;
+        }
+
+        QFile outFile( saveDir + "/" + curve->title().text() + ".csv" );
+        if( !outFile.open( QIODevice::WriteOnly ) )
+        {
+            return;
+        }
+
+        QTextStream outStream( &outFile );
+        outStream << "time,value" << "\n";
+
+        const QwtData& curveData = curve->data();
+        int curveDataSize = curveData.size();
+        for( int i = 0; i < curveDataSize; ++i )
+        {
+            QDateTime t = convertIntToTime( curveData.x( i ) );
+            outStream << t.toString();
+            outStream << ",";
+            double value = curveData.y( i );
+            outStream << QString::number( value );
+            outStream << "\n";
+        }
+    }
+
+    //
+    s.setValue( "/NIWA/sos/exportCsvDir", saveDir );
 }

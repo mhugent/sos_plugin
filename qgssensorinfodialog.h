@@ -56,6 +56,7 @@ class QgsSensorInfoDialog: public QDialog, private Ui::QgsSensorInfoDialogBase
     void onDiagramSelected( const QwtDoublePoint &pt );
     void on_mTabWidget_tabCloseRequested( int index );
     void showAllObservables();
+    void exportToCSV();
 
   private:
     QStringList plotList() const;
