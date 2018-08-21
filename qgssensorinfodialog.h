@@ -63,6 +63,8 @@ class QgsSensorInfoDialog: public QDialog, private Ui::QgsSensorInfoDialogBase
     QwtPlot* plot( const QString& name );
     QwtPlot* currentPlot();
     QwtPlotMarker* plotMarker( QwtPlot* plot );
+    /**Removes characters which might be roblematic e.g. on windows*/
+    static QString removeProblematicFileCharacters( const QString& fileName );
 
     QMap< QwtPlot*, QwtPlotMarker* > mPlotMarkers;
 

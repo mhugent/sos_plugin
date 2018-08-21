@@ -414,6 +414,20 @@ QwtPlotMarker* QgsSensorInfoDialog::plotMarker( QwtPlot* plot )
   return marker;
 }
 
+QString QgsSensorInfoDialog::removeProblematicFileCharacters( const QString& fileName )
+{
+    QString result = fileName;
+    result.remove( ':' );
+    result.remove( '?' );
+    result.remove( '*' );
+    result.remove( '/' );
+    result.remove( '\\' );
+    result.remove( '"' );
+    result.remove( '<' );
+    result.remove( '>' );
+    return result;
+}
+
 void QgsSensorInfoDialog::on_mTabWidget_tabCloseRequested( int index )
 {
   if ( index < 1 )
@@ -464,10 +478,10 @@ void QgsSensorInfoDialog::exportToCSV()
             continue;
         }
 
-        QFile outFile( saveDir + "/" + curve->title().text() + ".csv" );
+        QFile outFile( saveDir + "/" + removeProblematicFileCharacters( curve->title().text() ) + ".csv" );
         if( !outFile.open( QIODevice::WriteOnly ) )
         {
-            QgsMessageLog::logMessage( QString( "Creating output file %1 failed" ).arg( saveDir + "/" + curve->title().text() + ".csv" ), "SOS Plugin", QgsMessageLog::CRITICAL );
+            QgsMessageLog::logMessage( QString( "Creating output file %1 failed" ).arg( outFile.fileName() ), "SOS Plugin", QgsMessageLog::CRITICAL );
             QgsMessageLog::logMessage( outFile.errorString(), "SOS Plugin", QgsMessageLog::CRITICAL );
             return;
         }
@@ -491,3 +505,5 @@ void QgsSensorInfoDialog::exportToCSV()
     //
     s.setValue( "/NIWA/sos/exportCsvDir", saveDir );
 }
+
+
