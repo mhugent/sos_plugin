@@ -16,6 +16,7 @@
  ***************************************************************************/
 
 #include "qgssensorinfodialog.h"
+#include "qgsmessagelog.h"
 #include "qgswatermldata.h"
 #include <QCheckBox>
 #include <QCursor>
@@ -466,6 +467,8 @@ void QgsSensorInfoDialog::exportToCSV()
         QFile outFile( saveDir + "/" + curve->title().text() + ".csv" );
         if( !outFile.open( QIODevice::WriteOnly ) )
         {
+            QgsMessageLog::logMessage( QString( "Creating output file %1 failed" ).arg( saveDir + "/" + curve->title().text() + ".csv" ), "SOS Plugin", QgsMessageLog::CRITICAL );
+            QgsMessageLog::logMessage( outFile.errorString(), "SOS Plugin", QgsMessageLog::CRITICAL );
             return;
         }
 
