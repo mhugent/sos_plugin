@@ -19,6 +19,7 @@
 
 #include "ui_qgssossourceselectbase.h"
 #include <QStandardItemModel>
+#include <QSortFilterProxyModel>
 
 class QgsSOSCapabilities;
 class QgisInterface;
@@ -35,6 +36,7 @@ class QgsSOSSourceSelect: public QDialog, private Ui::QgsSOSSourceSelectBase
     void on_mNewButton_clicked();
     void on_mEditButton_clicked();
     void on_mDeleteButton_clicked();
+    void on_mFilterLineEdit_textChanged( const QString& text );
     void gotCapabilities();
     void addLayer();
 
@@ -42,6 +44,7 @@ class QgsSOSSourceSelect: public QDialog, private Ui::QgsSOSSourceSelectBase
     QgsSOSCapabilities* mCapabilities;
     QgisInterface* mIface;
     QStandardItemModel mOfferingsModel;
+    QSortFilterProxyModel mFilterModel;
 
     void populateConnectionList();
 };

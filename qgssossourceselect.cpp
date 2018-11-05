@@ -33,7 +33,8 @@ QgsSOSSourceSelect::QgsSOSSourceSelect( QgisInterface* iface, QWidget* parent, Q
   mButtonBox->addButton( mAddButton, QDialogButtonBox::ActionRole );
   connect( mAddButton, SIGNAL( clicked() ), this, SLOT( addLayer() ) );
 
-  mOfferingsView->setModel( &mOfferingsModel );
+  mFilterModel.setSourceModel( &mOfferingsModel );
+  mOfferingsView->setModel( &mFilterModel );
 }
 
 QgsSOSSourceSelect::~QgsSOSSourceSelect()
@@ -83,6 +84,11 @@ void QgsSOSSourceSelect::on_mDeleteButton_clicked()
     QgsOWSConnection::deleteConnection( "SOS", mConnectionsComboBox->currentText() );
     mConnectionsComboBox->removeItem( mConnectionsComboBox->currentIndex() );
   }
+}
+
+void QgsSOSSourceSelect::on_mFilterLineEdit_textChanged( const QString& text )
+{
+    mFilterModel.setFilterWildcard( text );
 }
 
 void QgsSOSSourceSelect::populateConnectionList()
@@ -162,7 +168,7 @@ void QgsSOSSourceSelect::addLayer()
       observedPropertiesString.append( "," );
     }
 
-    QStandardItem* item = mOfferingsModel.itemFromIndex( selectedIndexList.at( i ) );
+    QStandardItem* item = mOfferingsModel.itemFromIndex( mFilterModel.mapToSource( selectedIndexList.at( i ) ) );
     if( item )
     {
         observedPropertiesString.append( item->text() );
