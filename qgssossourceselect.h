@@ -18,6 +18,7 @@
 /**Dialog to connect to sensor observation services and to load layers*/
 
 #include "ui_qgssossourceselectbase.h"
+#include <QStandardItemModel>
 
 class QgsSOSCapabilities;
 class QgisInterface;
@@ -40,6 +41,7 @@ class QgsSOSSourceSelect: public QDialog, private Ui::QgsSOSSourceSelectBase
   private:
     QgsSOSCapabilities* mCapabilities;
     QgisInterface* mIface;
+    QStandardItemModel mOfferingsModel;
 
     void populateConnectionList();
 };

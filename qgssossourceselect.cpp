@@ -32,6 +32,8 @@ QgsSOSSourceSelect::QgsSOSSourceSelect( QgisInterface* iface, QWidget* parent, Q
   QPushButton* mAddButton = new QPushButton( tr( "&Add" ) );
   mButtonBox->addButton( mAddButton, QDialogButtonBox::ActionRole );
   connect( mAddButton, SIGNAL( clicked() ), this, SLOT( addLayer() ) );
+
+  mOfferingsView->setModel( &mOfferingsModel );
 }
 
 QgsSOSSourceSelect::~QgsSOSSourceSelect()
@@ -110,7 +112,7 @@ void QgsSOSSourceSelect::populateConnectionList()
 
 void QgsSOSSourceSelect::gotCapabilities()
 {
-  mOfferingsTreeWidget->clear();
+  mOfferingsModel.clear();
   if ( !mCapabilities )
   {
     return;
@@ -136,7 +138,7 @@ void QgsSOSSourceSelect::gotCapabilities()
     QStringList::const_iterator pIt = observablePropertyList->constBegin();
     for ( ; pIt != observablePropertyList->constEnd(); ++pIt )
     {
-      mOfferingsTreeWidget->addTopLevelItem( new QTreeWidgetItem( QStringList() << *pIt ) );
+        mOfferingsModel.appendRow( new QStandardItem( *pIt ) );
     }
   }
 }
@@ -152,16 +154,22 @@ void QgsSOSSourceSelect::addLayer()
   QString getFeatureOfInterestUrl = urlString + "SERVICE=SOS&request=GetFeatureOfInterest&Version=2.0.0";
 
   QString observedPropertiesString;
-  QList<QTreeWidgetItem*> selectedItemList = mOfferingsTreeWidget->selectedItems();
-  for ( int i = 0; i < selectedItemList.size(); ++i )
+  QModelIndexList selectedIndexList = mOfferingsView->selectionModel()->selectedRows();
+  for ( int i = 0; i < selectedIndexList.size(); ++i )
   {
     if ( i > 0 )
     {
       observedPropertiesString.append( "," );
     }
-    observedPropertiesString.append( selectedItemList.at( i )->text( 0 ) );
+
+    QStandardItem* item = mOfferingsModel.itemFromIndex( selectedIndexList.at( i ) );
+    if( item )
+    {
+        observedPropertiesString.append( item->text() );
+    }
   }
-  if ( !selectedItemList.isEmpty() )
+
+  if ( !selectedIndexList.isEmpty() )
   {
     getFeatureOfInterestUrl += ( QString( "&observedProperty=" ) + QString( QUrl::toPercentEncoding( observedPropertiesString.toLocal8Bit() ) ) );
   }
