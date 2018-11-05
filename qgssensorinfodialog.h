@@ -34,6 +34,7 @@ class QgsSensorInfoDialog: public QDialog, private Ui::QgsSensorInfoDialogBase
     {
         QString serviceUrl;
         QString stationId;
+        QString stationName;
         QStringList observables;
         QList< QDateTime > beginList;
         QList< QDateTime > endList;
@@ -43,9 +44,9 @@ class QgsSensorInfoDialog: public QDialog, private Ui::QgsSensorInfoDialogBase
     ~QgsSensorInfoDialog();
 
     void clearObservables();
-    void addObservables( const QString& serviceUrl, const QString stationId, const QStringList& observables, const QList< QDateTime >& begin, const QList< QDateTime >& end );
+    void addObservables( const QString& serviceUrl, const QString& stationId, const QString& stationName, const QStringList& observables, const QList< QDateTime >& begin, const QList< QDateTime >& end );
     /**Adds observables which are hidden at the moment but may be shown later (after mShowAllObservableButton has been clicked)*/
-    void addHiddenObservables( const QString& serviceUrl, const QString stationId, const QStringList& observables, const QList< QDateTime >& begin, const QList< QDateTime >& end );
+    void addHiddenObservables( const QString& serviceUrl, const QString& stationId, const QString& stationName, const QStringList& observables, const QList< QDateTime >& begin, const QList< QDateTime >& end );
 
     void openObservablesTab();
 

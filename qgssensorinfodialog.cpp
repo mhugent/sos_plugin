@@ -86,7 +86,7 @@ void QgsSensorInfoDialog::clearObservables()
   mHiddenObservables.clear();
 }
 
-void QgsSensorInfoDialog::addObservables( const QString& serviceUrl, const QString stationId, const QStringList& observables, const QList< QDateTime >& begin,
+void QgsSensorInfoDialog::addObservables( const QString& serviceUrl, const QString& stationId, const QString& stationName, const QStringList& observables, const QList< QDateTime >& begin,
     const QList< QDateTime >& end )
 {
   QTreeWidgetItem* stationIdItem = 0;
@@ -94,7 +94,7 @@ void QgsSensorInfoDialog::addObservables( const QString& serviceUrl, const QStri
   for( int i = 0; i < stationItemCount; ++i )
   {
     QTreeWidgetItem* currentItem = mObservableTreeWidget->topLevelItem( i );
-    if( currentItem->text( 0 ) == stationId )
+    if( currentItem->data( 0, Qt::UserRole + 1 ) == stationId )
     {
         stationIdItem = currentItem;
         break;
@@ -103,9 +103,10 @@ void QgsSensorInfoDialog::addObservables( const QString& serviceUrl, const QStri
 
   if( !stationIdItem ) //item does not yet exist, create a new one
   {
-      stationIdItem = new QTreeWidgetItem( QStringList() << stationId );
+      stationIdItem = new QTreeWidgetItem( QStringList() << stationName );
       mObservableTreeWidget->addTopLevelItem( stationIdItem );
       stationIdItem->setData( 0, Qt::UserRole, serviceUrl );
+      stationIdItem->setData( 0, Qt::UserRole + 1, stationId );
       stationIdItem->setFlags( Qt::ItemIsEnabled );
   }
 
@@ -147,11 +148,12 @@ void QgsSensorInfoDialog::addObservables( const QString& serviceUrl, const QStri
   mObservableTreeWidget->expandAll();
 }
 
-void QgsSensorInfoDialog::addHiddenObservables( const QString& serviceUrl, const QString stationId, const QStringList& observables, const QList< QDateTime >& begin, const QList< QDateTime >& end )
+void QgsSensorInfoDialog::addHiddenObservables( const QString& serviceUrl, const QString& stationId, const QString& stationName, const QStringList& observables, const QList< QDateTime >& begin, const QList< QDateTime >& end )
 {
     ObservableEntry entry;
     entry.serviceUrl = serviceUrl;
     entry.stationId = stationId;
+    entry.stationName = stationName;
     entry.observables = observables;
     entry.beginList = begin;
     entry.endList = end;
@@ -192,8 +194,9 @@ void QgsSensorInfoDialog::showDiagram()
     }
   }
 
-  QString featureOfInterest = parent->text( 0 );
+  QString featureOfInterest = parent->data( 0, Qt::UserRole + 1 ).toString();
   QString serviceUrl = parent->data( 0, Qt::UserRole ).toString();
+  QString stationName = parent->text( 0 );
   QString observedProperty = item->text( 1 );
 
   bool useTemporalFilter = qobject_cast<QCheckBox*>( mObservableTreeWidget->itemWidget( item, 2 ) )->isChecked();
@@ -250,7 +253,7 @@ void QgsSensorInfoDialog::showDiagram()
   //create new QWtPlot
   if( !targetPlot )
   {
-    targetPlot = new QwtPlot( featureOfInterest, this );
+    targetPlot = new QwtPlot( stationName, this );
     targetPlot->setAxisScaleDraw( QwtPlot::xBottom, new TimeScaleDraw() );
 
     //plot picker to show tooltips
@@ -266,7 +269,7 @@ void QgsSensorInfoDialog::showDiagram()
   //random color
   QColor curveColor = QColor::fromHsv( qrand() % 360, 64 + qrand() % 192, 128 + qrand() % 128 );
 
-  QwtPlotCurve* curve = new QwtPlotCurve( featureOfInterest + "_" + observedProperty );
+  QwtPlotCurve* curve = new QwtPlotCurve( stationName + "_" + observedProperty );
   curve->setPen( QPen( curveColor ) );
   curve->setData( timeVector.constData(), valueVector.constData(), timeValueMap.size() );
 
@@ -442,7 +445,7 @@ void QgsSensorInfoDialog::showAllObservables()
     QList< ObservableEntry >::const_iterator it = mHiddenObservables.constBegin();
     for(; it != mHiddenObservables.constEnd(); ++it )
     {
-        addObservables( it->serviceUrl, it->stationId, it->observables, it->beginList, it->endList );
+        addObservables( it->serviceUrl, it->stationId, it->stationName, it->observables, it->beginList, it->endList );
     }
     mHiddenObservables.clear();
     mShowAllButton->setEnabled( false );

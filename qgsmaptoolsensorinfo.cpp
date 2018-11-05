@@ -129,8 +129,8 @@ void QgsMapToolSensorInfo::canvasReleaseEvent( QgsMapMouseEvent* e )
             QList< QDateTime > filteredEnd;
             getDataAvailability( dp->dataSourceUri(), id, observedProperties, beginList, endList, filteredProperties, filteredBegin, filteredEnd );
 
-            mSensorInfoDialog->addObservables( dp->dataSourceUri(), id, observedProperties, beginList, endList );
-            mSensorInfoDialog->addHiddenObservables( dp->dataSourceUri(), id, filteredProperties, filteredBegin, filteredEnd );
+            mSensorInfoDialog->addObservables( dp->dataSourceUri(), id, name, observedProperties, beginList, endList );
+            mSensorInfoDialog->addHiddenObservables( dp->dataSourceUri(), id, name, filteredProperties, filteredBegin, filteredEnd );
         }
     }
 
