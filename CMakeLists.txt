@@ -1,6 +1,12 @@
 ########################################################
 # Files
-find_package( Qt4 REQUIRED )
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8.8)
+
+find_package(Qt5Core REQUIRED)
+find_package(Qt5Gui REQUIRED)
+find_package(Qt5Network REQUIRED)
+find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Xml REQUIRED)
 
 SET ( QGIS_INCLUDE_DIR "C:/Program Files/QGIS 2 18/include" CACHE PATH "Path to QGIS include directory")
 SET ( QGIS_CORE_LIB "C:/Program Files/QGIS 2 18/lib/qgis_core.lib" CACHE PATH "QGIS core library" )
@@ -13,7 +19,7 @@ SET ( QT_INCLUDE_DIR "" CACHE PATH "Path to Qt include directory" )
 SET ( QT_LIB_DIR "" CACHE PATH "Path to the directory containing the Qt libraries")
 
 SET (CMAKE_CXX_STANDARD 11)
-
+set(CMAKE_AUTOMOC ON)
 
 SET (SOS_SRCS
      qgssosplugin.cpp
@@ -48,11 +54,9 @@ SET (SOS_RCCS  resources.qrc)
 ########################################################
 # Build
 
-QT4_WRAP_UI (SOS_UIS_H  ${SOS_UIS})
+QT5_WRAP_UI (SOS_UIS_H  ${SOS_UIS})
 
-QT4_WRAP_CPP( SOS_MOC_SRCS ${SOS_MOC_HDRS})
-
-QT4_ADD_RESOURCES(SOS_RCC_SRCS ${SOS_RCCS})
+QT5_ADD_RESOURCES(SOS_RCC_SRCS ${SOS_RCCS})
 
 ADD_LIBRARY (sosplugin MODULE
   ${SOS_SRCS}
@@ -70,6 +74,7 @@ INCLUDE_DIRECTORIES(
      ${QT_INCLUDE_DIR}/QtCore
      ${QT_INCLUDE_DIR}/QtGui
      ${QT_INCLUDE_DIR}/QtNetwork
+     ${QT_INCLUDE_DIR}/QtWidgets
      ${QT_INCLUDE_DIR}/QtXml
      ${QT_INCLUDE_DIR}/Qt
      ${QT_INCLUDE_DIR}
@@ -92,10 +97,11 @@ TARGET_LINK_LIBRARIES(sosplugin
   ${QGIS_GUI_LIB}
   ${EXPAT_LIBRARY}
   ${QWT_LIBRARY}
-  ${QT_LIB_DIR}/QtCore4.lib
-  ${QT_LIB_DIR}/QtGui4.lib
-  ${QT_LIB_DIR}/QtNetwork4.lib
-  ${QT_LIB_DIR}/QtXml4.lib
+  ${QT_LIB_DIR}/QtCore5.lib
+  ${QT_LIB_DIR}/QtGui5.lib
+  ${QT_LIB_DIR}/QtNetwork5.lib
+  ${QT_LIB_DIR}/QtWidgets5.lib
+  ${QT_LIB_DIR}/QtXml5.lib
 )
 ELSE()
   TARGET_LINK_LIBRARIES(sosplugin
@@ -103,10 +109,11 @@ ELSE()
   ${QGIS_GUI_LIB}
   ${EXPAT_LIBRARY}
   ${QWT_LIBRARY}
-  ${QT_LIB_DIR}/libQtCore.so
-  ${QT_LIB_DIR}/libQtGui.so
-  ${QT_LIB_DIR}/libQtNetwork.so
-  ${QT_LIB_DIR}/libQtXml.so
+  ${QT_LIB_DIR}/libQt5Core.so
+  ${QT_LIB_DIR}/libQt5Gui.so
+  ${QT_LIB_DIR}/libQt5Network.so
+  ${QT_LIB_DIR}/libQt5Widgets.so
+  ${QT_LIB_DIR}/libQt5Xml.so
 )
 ENDIF (WIN32)
 

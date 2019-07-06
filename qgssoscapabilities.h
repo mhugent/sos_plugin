@@ -41,7 +41,7 @@ class QgsSOSCapabilities: public QObject
     const QString& xmlError() const { return mXmlError; }
 
   private:
-    QgsDataSourceURI mUrl;
+    QgsDataSourceUri mUrl;
     QString mBaseUrl;
     QNetworkReply* mCapabilitiesReply;
     QString mNetworkError;

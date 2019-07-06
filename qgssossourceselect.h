@@ -28,7 +28,7 @@ class QgsSOSSourceSelect: public QDialog, private Ui::QgsSOSSourceSelectBase
 {
     Q_OBJECT
   public:
-    QgsSOSSourceSelect( QgisInterface* iface, QWidget* parent = 0, Qt::WFlags fl = 0 );
+    QgsSOSSourceSelect( QgisInterface* iface, QWidget* parent = 0, Qt::WindowFlags fl = 0 );
     ~QgsSOSSourceSelect();
 
   private slots:

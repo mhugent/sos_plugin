@@ -23,7 +23,7 @@
 #include <QMessageBox>
 #include <QUrl>
 
-QgsSOSSourceSelect::QgsSOSSourceSelect( QgisInterface* iface, QWidget* parent, Qt::WFlags fl ):
+QgsSOSSourceSelect::QgsSOSSourceSelect( QgisInterface* iface, QWidget* parent, Qt::WindowFlags fl ):
     QDialog( parent, fl ), mCapabilities( 0 ), mIface( iface )
 {
   setupUi( this );
@@ -44,7 +44,7 @@ QgsSOSSourceSelect::~QgsSOSSourceSelect()
 
 void QgsSOSSourceSelect::on_mConnectButton_clicked()
 {
-  QgsOWSConnection connection( "SOS", mConnectionsComboBox->currentText() );
+  QgsOwsConnection connection( "SOS", mConnectionsComboBox->currentText() );
   delete mCapabilities;
   mCapabilities = new QgsSOSCapabilities( connection.uri().encodedUri() );
   connect( mCapabilities, SIGNAL( gotCapabilities() ), this, SLOT( gotCapabilities() ) );
@@ -53,7 +53,7 @@ void QgsSOSSourceSelect::on_mConnectButton_clicked()
 
 void QgsSOSSourceSelect::on_mNewButton_clicked()
 {
-  QgsNewHttpConnection nc( 0, "/Qgis/connections-sos/" );
+  QgsNewHttpConnection nc( 0, QgsNewHttpConnection::ConnectionOther, "/Qgis/connections-sos/" );
   nc.setWindowTitle( tr( "Create a new SOS connection" ) );
 
   if ( nc.exec() == QDialog::Accepted )
@@ -64,7 +64,7 @@ void QgsSOSSourceSelect::on_mNewButton_clicked()
 
 void QgsSOSSourceSelect::on_mEditButton_clicked()
 {
-  QgsNewHttpConnection nc( 0, "/Qgis/connections-sos/", mConnectionsComboBox->currentText() );
+  QgsNewHttpConnection nc( 0, QgsNewHttpConnection::ConnectionOther, "/Qgis/connections-sos/", mConnectionsComboBox->currentText() );
   nc.setWindowTitle( tr( "Modify SOS connection" ) );
 
   if ( nc.exec() )
@@ -81,7 +81,7 @@ void QgsSOSSourceSelect::on_mDeleteButton_clicked()
   QMessageBox::StandardButton result = QMessageBox::information( this, tr( "Confirm Delete" ), msg, QMessageBox::Ok | QMessageBox::Cancel );
   if ( result == QMessageBox::Ok )
   {
-    QgsOWSConnection::deleteConnection( "SOS", mConnectionsComboBox->currentText() );
+    QgsOwsConnection::deleteConnection( "SOS", mConnectionsComboBox->currentText() );
     mConnectionsComboBox->removeItem( mConnectionsComboBox->currentIndex() );
   }
 }
@@ -95,7 +95,7 @@ void QgsSOSSourceSelect::populateConnectionList()
 {
   mConnectionsComboBox->clear();
 
-  QStringList keys = QgsOWSConnection::connectionList( "SOS" );
+  QStringList keys = QgsOwsConnection::connectionList( "SOS" );
   QStringList::const_iterator it = keys.constBegin();
   for ( ; it != keys.constEnd(); ++it )
   {
@@ -108,7 +108,7 @@ void QgsSOSSourceSelect::populateConnectionList()
   mDeleteButton->setEnabled( buttonsEnabled );
 
   //set last used connection
-  QString selectedConnection = QgsOWSConnection::selectedConnection( "SOS" );
+  QString selectedConnection = QgsOwsConnection::selectedConnection( "SOS" );
   int index = mConnectionsComboBox->findText( selectedConnection );
   if ( index != -1 )
   {
@@ -151,7 +151,7 @@ void QgsSOSSourceSelect::gotCapabilities()
 
 void QgsSOSSourceSelect::addLayer()
 {
-  QgsOWSConnection connection( "SOS", mConnectionsComboBox->currentText() );
+  QgsOwsConnection connection( "SOS", mConnectionsComboBox->currentText() );
   QString urlString = connection.uri().param( "url" );
   if( !urlString.endsWith( "?" ) && !urlString.endsWith( "&" ) )
   {

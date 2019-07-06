@@ -95,7 +95,7 @@ int QgsXMLData::getXMLData( QProgressDialog* progress )
                               .arg( XML_ErrorString( errorCode ) )
                               .arg( XML_GetCurrentLineNumber( p ) )
                               .arg( XML_GetCurrentColumnNumber( p ) );
-        QgsMessageLog::instance()->logMessage( errorString, QObject::tr( "SOS" ) );
+        QgsMessageLog::logMessage( errorString, QObject::tr( "SOS" ) );
       }
     }
     QCoreApplication::processEvents();

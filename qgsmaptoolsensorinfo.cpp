@@ -17,6 +17,7 @@
 
 #include "qgsmaptoolsensorinfo.h"
 #include "qgsmapcanvas.h"
+#include "qgsmapmouseevent.h"
 #include "qgsmaptoolidentify.h"
 #include "qgsnetworkaccessmanager.h"
 #include "qgsrubberband.h"
@@ -62,7 +63,7 @@ void QgsMapToolSensorInfo::canvasPressEvent( QgsMapMouseEvent* e )
 {
     mSelectRect.setRect( 0, 0, 0, 0 );
     delete mRubberBand;
-    mRubberBand = new QgsRubberBand( mCanvas, QGis::Polygon );
+    mRubberBand = new QgsRubberBand( mCanvas, QgsWkbTypes::PolygonGeometry );
     mRubberBand->setFillColor( QColor( 255, 0, 0, 127 ) );
 }
 
@@ -95,8 +96,8 @@ void QgsMapToolSensorInfo::canvasReleaseEvent( QgsMapMouseEvent* e )
         }
 
         //rectangle in layer CRS
-        QgsPoint llRect;
-        QgsPoint urRect;
+        QgsPointXY llRect;
+        QgsPointXY urRect;
         if( mDragging )
         {
             llRect = toMapCoordinates( mSelectRect.bottomLeft () );
@@ -172,16 +173,17 @@ int QgsMapToolSensorInfo::getDataAvailability( const QString& serviceUrl, const 
   }
 
   QUrl url( serviceUrl );
+  QUrlQuery query(url);
 
   //filter list to only get the observables selected for the sos layer
-  QSet<QString> selectedObservables = QUrl::fromPercentEncoding( url.queryItemValue( "observedProperty" )\
+  QSet<QString> selectedObservables = QUrl::fromPercentEncoding( query.queryItemValue( "observedProperty" )\
                                       .toLocal8Bit() ).split( ",", QString::SkipEmptyParts ).toSet();
 
-  url.removeQueryItem( "observedProperty" );
-  url.removeQueryItem( "request" );
-  url.addQueryItem( "request", "GetDataAvailability" );
-  url.addQueryItem( "featureofinterest", station_id );
-
+  query.removeQueryItem( "observedProperty" );
+  query.removeQueryItem( "request" );
+  query.addQueryItem( "request", "GetDataAvailability" );
+  query.addQueryItem( "featureofinterest", station_id );
+  url.setQuery( query );
   QString debug = url.toString();
 
   mDataAvailabilityRequestFinished = false;

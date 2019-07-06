@@ -30,6 +30,7 @@
 #include <QSettings>
 #include <QTextStream>
 #include <QUrl>
+#include <QUrlQuery>
 #include <QToolTip>
 #include <qwt_picker_machine.h>
 #include <qwt_plot.h>
@@ -216,16 +217,18 @@ void QgsSensorInfoDialog::showDiagram()
   }
 
   QUrl url( serviceUrl );
-  url.removeQueryItem( "request" );
-  url.addQueryItem( "request", "GetObservation" );
-  url.addQueryItem( "featureOfInterest", featureOfInterest );
-  url.removeQueryItem( "observedProperty" );
-  url.addQueryItem( "observedProperty", observedProperty );
-  url.addQueryItem( "responseFormat", "http://www.opengis.net/waterml/2.0" );
+  QUrlQuery query( url );
+  query.removeQueryItem( "request" );
+  query.addQueryItem( "request", "GetObservation" );
+  query.addQueryItem( "featureOfInterest", featureOfInterest );
+  query.removeQueryItem( "observedProperty" );
+  query.addQueryItem( "observedProperty", observedProperty );
+  query.addQueryItem( "responseFormat", "http://www.opengis.net/waterml/2.0" );
   if ( useTemporalFilter )
   {
-    url.addQueryItem( "temporalFilter", temporalFilter );
+    query.addQueryItem( "temporalFilter", temporalFilter );
   }
+  url.setQuery( query );
 
   QgsWaterMLData data( url.toString().toLocal8Bit().data() );
 
@@ -258,7 +261,7 @@ void QgsSensorInfoDialog::showDiagram()
 
     //plot picker to show tooltips
     QwtPlotPicker* plotPicker = new QwtPlotPicker( targetPlot->canvas() );
-    plotPicker->setSelectionFlags( QwtPicker::PointSelection | QwtPicker::ClickSelection );
+    //plotPicker->setSelectionFlags( QwtPicker::PointSelection | QwtPicker::ClickSelection );
     plotPicker->setRubberBand( QwtPlotPicker::RectRubberBand );
     connect( plotPicker, SIGNAL( selected( const QwtDoublePoint& ) ), this, SLOT( onDiagramSelected( const QwtDoublePoint& ) ) );
 
@@ -271,9 +274,9 @@ void QgsSensorInfoDialog::showDiagram()
 
   QwtPlotCurve* curve = new QwtPlotCurve( stationName + "_" + observedProperty );
   curve->setPen( QPen( curveColor ) );
-  curve->setData( timeVector.constData(), valueVector.constData(), timeValueMap.size() );
+  curve->setSamples( timeVector.constData(), valueVector.constData(), timeValueMap.size() );
 
-  QwtSymbol symbol( QwtSymbol::Rect, QBrush( Qt::NoBrush ), QPen( Qt::red ), QSize( 5, 5 ) );
+  QwtSymbol* symbol = new QwtSymbol( QwtSymbol::Rect, QBrush( Qt::NoBrush ), QPen( Qt::red ), QSize( 5, 5 ) );
   curve->setSymbol( symbol );
   curve->attach( targetPlot );
 
@@ -344,11 +347,11 @@ void QgsSensorInfoDialog::onDiagramSelected( const QwtDoublePoint &pt )
       return;
   }
 
-  QString snappedTime = convertIntToTime( closestCurve->data().x( snapPoint ) ).toString();
-  double snappedValue = closestCurve->data().y( snapPoint );
+  QString snappedTime = convertIntToTime( closestCurve->data()->sample( snapPoint ).x() ).toString();
+  double snappedValue = closestCurve->data()->sample( snapPoint ).y();
 
   QwtPlotMarker* mark = plotMarker( cPlot );
-  mark->setValue( closestCurve->data().x( snapPoint ), closestCurve->data().y( snapPoint ) );
+  mark->setValue( closestCurve->data()->sample( snapPoint ).x(), closestCurve->data()->sample( snapPoint ).y() );
   mark->show();
 
   QwtText  labelText;
@@ -411,7 +414,7 @@ QwtPlotMarker* QgsSensorInfoDialog::plotMarker( QwtPlot* plot )
   QwtPlotMarker* marker = new QwtPlotMarker();
   marker->setXAxis( QwtPlot::xBottom );
   marker->setYAxis( QwtPlot::yLeft );
-  marker->setSymbol( QwtSymbol( QwtSymbol::Rect, QBrush( Qt::blue ), QPen( Qt::green ), QSize( 5, 5 ) ) );
+  marker->setSymbol( new QwtSymbol( QwtSymbol::Rect, QBrush( Qt::blue ), QPen( Qt::green ), QSize( 5, 5 ) ) );
   marker->attach( plot );
   mPlotMarkers.insert( plot, marker );
   return marker;
@@ -484,22 +487,21 @@ void QgsSensorInfoDialog::exportToCSV()
         QFile outFile( saveDir + "/" + removeProblematicFileCharacters( curve->title().text() ) + ".csv" );
         if( !outFile.open( QIODevice::WriteOnly ) )
         {
-            QgsMessageLog::logMessage( QString( "Creating output file %1 failed" ).arg( outFile.fileName() ), "SOS Plugin", QgsMessageLog::CRITICAL );
-            QgsMessageLog::logMessage( outFile.errorString(), "SOS Plugin", QgsMessageLog::CRITICAL );
+            QgsMessageLog::logMessage( QString( "Creating output file %1 failed" ).arg( outFile.fileName() ), "SOS Plugin", Qgis::Critical );
+            QgsMessageLog::logMessage( outFile.errorString(), "SOS Plugin", Qgis::Critical );
             return;
         }
 
         QTextStream outStream( &outFile );
         outStream << "time,value" << "\n";
 
-        const QwtData& curveData = curve->data();
-        int curveDataSize = curveData.size();
+        int curveDataSize = curve->dataSize();
         for( int i = 0; i < curveDataSize; ++i )
         {
-            QDateTime t = convertIntToTime( curveData.x( i ) );
+            QDateTime t = convertIntToTime( curve->sample( i ).x() );
             outStream << t.toString();
             outStream << ",";
-            double value = curveData.y( i );
+            double value = curve->sample( i ).y();
             outStream << QString::number( value );
             outStream << "\n";
         }

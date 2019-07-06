@@ -19,7 +19,7 @@
 #define QGSSENSORINFODIALOG_H
 
 #include "ui_qgssensorinfodialogbase.h"
-#include <qwt_double_rect.h>
+#include "qwt_compat.h"
 #include <QDateTime>
 
 class QwtPlot;
