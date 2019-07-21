@@ -54,7 +54,7 @@ class QgsSensorInfoDialog: public QDialog, private Ui::QgsSensorInfoDialogBase
     void showDiagram();
     int convertTimeToInt( const QDateTime& dt ) const;
     QDateTime convertIntToTime( int t ) const;
-    void onDiagramSelected( const QwtDoublePoint &pt );
+    void onDiagramSelected( const QPointF& pt );
     void on_mTabWidget_tabCloseRequested( int index );
     void showAllObservables();
     void exportToCSV();

@@ -261,9 +261,8 @@ void QgsSensorInfoDialog::showDiagram()
 
     //plot picker to show tooltips
     QwtPlotPicker* plotPicker = new QwtPlotPicker( targetPlot->canvas() );
-    //plotPicker->setSelectionFlags( QwtPicker::PointSelection | QwtPicker::ClickSelection );
-    plotPicker->setRubberBand( QwtPlotPicker::RectRubberBand );
-    connect( plotPicker, SIGNAL( selected( const QwtDoublePoint& ) ), this, SLOT( onDiagramSelected( const QwtDoublePoint& ) ) );
+    plotPicker->setStateMachine( new QwtPickerClickPointMachine() );
+    connect( plotPicker, SIGNAL( selected( const QPointF& ) ), this, SLOT( onDiagramSelected( const QPointF& ) ) );
 
     int nPlots = plotList().size();
     mTabWidget->addTab( targetPlot, tr( "Plot %1" ).arg( nPlots + 1 ) );
@@ -308,7 +307,7 @@ QDateTime QgsSensorInfoDialog::convertIntToTime( int t ) const
   }
 }
 
-void QgsSensorInfoDialog::onDiagramSelected( const QwtDoublePoint &pt )
+void QgsSensorInfoDialog::onDiagramSelected( const QPointF& pt )
 {
   QwtPlot* cPlot = currentPlot();
   if( !cPlot )
