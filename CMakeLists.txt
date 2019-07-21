@@ -76,6 +76,7 @@ INCLUDE_DIRECTORIES(
      ${QT_INCLUDE_DIR}/QtNetwork
      ${QT_INCLUDE_DIR}/QtWidgets
      ${QT_INCLUDE_DIR}/QtXml
+     ${QT_INCLUDE_DIR}/QtSvg
      ${QT_INCLUDE_DIR}/Qt
      ${QT_INCLUDE_DIR}
      ..
