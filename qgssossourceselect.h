@@ -47,4 +47,5 @@ class QgsSOSSourceSelect: public QDialog, private Ui::QgsSOSSourceSelectBase
     QSortFilterProxyModel mFilterModel;
 
     void populateConnectionList();
+    void showConnectionDialog( const QString& connectionName = QString(), const QString& connectionUrl = QString() );
 };

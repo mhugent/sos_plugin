@@ -23,6 +23,7 @@ set(CMAKE_AUTOMOC ON)
 
 SET (SOS_SRCS
      qgssosplugin.cpp
+     qgssosconnectiondialog.cpp
      qgssossourceselect.cpp
      qgssoscapabilities.cpp
      qgsmaptoolsensorinfo.cpp
@@ -32,9 +33,9 @@ SET (SOS_SRCS
 )
 
 SET (SOS_UIS
+    qgssosconnectiondialogbase.ui
     qgssossourceselectbase.ui
     qgssensorinfodialogbase.ui
-    qgsnewhttpconnectionbase.ui
     )
 
 SET (SOS_MOC_HDRS

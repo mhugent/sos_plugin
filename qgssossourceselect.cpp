@@ -16,9 +16,9 @@
  ***************************************************************************/
 
 #include "qgssossourceselect.h"
+#include "qgssosconnectiondialog.h"
 #include "qgsowsconnection.h"
 #include "qgssoscapabilities.h"
-#include "qgsnewhttpconnection.h"
 #include "qgisinterface.h"
 #include <QMessageBox>
 #include <QUrl>
@@ -53,25 +53,26 @@ void QgsSOSSourceSelect::on_mConnectButton_clicked()
 
 void QgsSOSSourceSelect::on_mNewButton_clicked()
 {
-  QgsNewHttpConnection nc( 0, QgsNewHttpConnection::ConnectionOther, "/Qgis/connections-sos/" );
-  nc.setWindowTitle( tr( "Create a new SOS connection" ) );
-
-  if ( nc.exec() == QDialog::Accepted )
-  {
-    populateConnectionList();
-  }
+    showConnectionDialog();
 }
 
 void QgsSOSSourceSelect::on_mEditButton_clicked()
 {
-  QgsNewHttpConnection nc( 0, QgsNewHttpConnection::ConnectionOther, "/Qgis/connections-sos/", mConnectionsComboBox->currentText() );
-  nc.setWindowTitle( tr( "Modify SOS connection" ) );
+    QSettings s;
+    QString connectionName = mConnectionsComboBox->currentText();
+    QString url = s.value( "qgis/connections-sos/" + connectionName + "/url" ).toString();
+    showConnectionDialog( connectionName, url );
+}
 
-  if ( nc.exec() )
-  {
-    populateConnectionList();
-    //emit connectionsChanged();
-  }
+void QgsSOSSourceSelect::showConnectionDialog( const QString& connectionName, const QString& connectionUrl )
+{
+    QgsSOSConnectionDialog d( connectionName, connectionUrl, this );
+    if( d.exec() == QDialog::Accepted )
+    {
+        QSettings s;
+        s.setValue( QString( "qgis/connections-sos/" ) + d.name() + "/url", d.url() );
+        populateConnectionList();
+    }
 }
 
 void QgsSOSSourceSelect::on_mDeleteButton_clicked()
