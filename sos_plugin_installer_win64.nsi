@@ -1,5 +1,7 @@
 !include x64.nsh
 
+Name "QGIS SOS plugin"
+
 OutFile "sos_plugin_setup.exe"
 DirText "Select path to QGIS LTR installation" "QGIS LTR directory"
 
