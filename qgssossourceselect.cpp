@@ -21,6 +21,7 @@
 #include "qgssoscapabilities.h"
 #include "qgisinterface.h"
 #include <QMessageBox>
+#include <QSettings>
 #include <QUrl>
 
 QgsSOSSourceSelect::QgsSOSSourceSelect( QgisInterface* iface, QWidget* parent, Qt::WindowFlags fl ):
